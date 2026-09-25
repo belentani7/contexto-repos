@@ -122,16 +122,47 @@ def has_any(p, names):
     return any((p / n).exists() for n in names)
 
 
+def git_info(p):
+    """Lee remoto/rama/fecha directo del .git (sin lanzar git)."""
+    g = p / ".git"
+    remote = ""
+    branch = "(sin commits)"
+    last = ""
+    cfg = g / "config"
+    if cfg.is_file():
+        try:
+            txt = cfg.read_text(encoding="utf-8", errors="replace")
+            m = re.search(r'\[remote "origin"\][^\[]*?url\s*=\s*(\S+)', txt, re.S)
+            if m:
+                remote = m.group(1)
+        except Exception:
+            pass
+    head = g / "HEAD"
+    if head.is_file():
+        try:
+            h = head.read_text(encoding="utf-8", errors="replace").strip()
+            branch = h.split("/")[-1] if h.startswith("ref:") else "(detached)"
+        except Exception:
+            pass
+    logs = g / "logs" / "HEAD"
+    if logs.is_file():
+        try:
+            line = logs.read_text(encoding="utf-8", errors="replace").strip().splitlines()[-1]
+            ts = int(line.split("\t")[0].split()[4])
+            last = datetime.fromtimestamp(ts, timezone.utc).date().isoformat()
+        except Exception:
+            pass
+    return remote, branch, last
+
+
 def analyze(p):
-    remote = run_git(p, "remote", "get-url", "origin")
-    branch = run_git(p, "rev-parse", "--abbrev-ref", "HEAD")
+    remote, branch, last = git_info(p)
     porcelain = run_git(p, "status", "--porcelain")
     dirty = len([x for x in porcelain.splitlines() if x.strip()])
-    last = run_git(p, "log", "-1", "--format=%cI")
     recent = False
     if last:
         try:
-            dt = datetime.fromisoformat(last.replace("Z", "+00:00"))
+            dt = datetime.fromisoformat(last).replace(tzinfo=timezone.utc)
             recent = (datetime.now(timezone.utc) - dt).days <= 60
         except Exception:
             pass
@@ -142,9 +173,9 @@ def analyze(p):
         "remote": remote,
         "owner": (re.search(r"github\.com[:/]+([^/]+)/", remote).group(1)
                   if remote and re.search(r"github\.com[:/]+([^/]+)/", remote) else ""),
-        "branch": branch or "(sin commits)",
+        "branch": branch,
         "dirty": dirty,
-        "last_commit": last[:10] if last else "",
+        "last_commit": last,
         "recent": recent,
         "readme": has_any(p, ["README.md", "readme.md", "README.MD", "README.rst"]),
         "manifest": has_any(p, MANIFIESTOS),
@@ -230,7 +261,7 @@ def build():
     print("      %d repos" % len(repos), flush=True)
     print("[2/3] analizando estado...", flush=True)
 
-    with ThreadPoolExecutor(max_workers=12) as ex:
+    with ThreadPoolExecutor(max_workers=24) as ex:
         infos = list(ex.map(analyze, repos))
 
     items = []
