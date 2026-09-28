@@ -9,7 +9,7 @@ Autoejecutable:
     python contexto_panel.py                 # escanea y regenera JSON + HTML
     python contexto_panel.py --serve 8770    # ademas sirve y abre el panel
 
-El HTML se auto-actualiza cada 30 s leyendo contexto_panel.json (via HTTP).
+El HTML se auto-actualiza cada 1 h leyendo contexto_panel.json (via HTTP).
 """
 import argparse
 import html
@@ -327,7 +327,7 @@ a{color:#7dd3fc;text-decoration:none}footer{text-align:center;color:var(--mut);f
 </style>
 <header>
 <h1>Panel de Contexto — estado de tus repos git <span class="tag" id="gen">--</span></h1>
-<div class="sub">Contexto, no auditoria. Barra 0-100%: <b style="color:#f85149">rojo</b> - <b style="color:#d29922">amarillo</b> - <b style="color:#3fb950">verde</b>. Que funcion cumple, que le falta y tiempo de arreglo. Se auto-actualiza cada 30s.</div>
+<div class="sub">Contexto, no auditoria. Barra 0-100%: <b style="color:#f85149">rojo</b> - <b style="color:#d29922">amarillo</b> - <b style="color:#3fb950">verde</b>. Que funcion cumple, que le falta y tiempo de arreglo. Se auto-actualiza cada 1 h.</div>
 </header>
 <div class="wrap">
 <div class="big">
@@ -401,7 +401,7 @@ async function refresh(){
     if(resp.ok){DATA=await resp.json();}}catch(e){}
   render();
 }
-refresh();setInterval(refresh,30000);
+refresh();setInterval(refresh,3600000);
 </script></html>"""
     OUT_HTML.write_text(doc.replace("__DATA__", data), encoding="utf-8")
 
