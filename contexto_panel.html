@@ -87,7 +87,7 @@ function render(){
   var tb=document.getElementById("tb");tb.innerHTML="";
   rows.forEach(function(r){
     var tr=document.createElement("tr");
-    var rem=r.remote?('<a href="'+esc(r.remote.replace(/\.git$/,""))+'" target="_blank">'+esc(r.owner||"remoto")+'</a>'):'<span style="color:#f85149">sin remoto</span>';
+    var rem=r.remote?('<a href="'+esc(r.remote.replace(/\.git$/,""))+'" target="_blank" rel="noopener noreferrer">'+esc(r.owner||"remoto")+'</a>'):'<span style="color:#f85149">sin remoto</span>';
     var falta=r.falta.length?r.falta.map(function(x){return '<span class="tag">'+esc(x)+'</span>'}).join(""):'<span style="color:#3fb950">nada critico</span>';
     tr.innerHTML='<td><b>'+esc(r.name)+'</b><div style="color:#64748b;font-size:11px">'+esc(r.path)+'</div></td>'
       +'<td><span class="bar"><i style="width:'+r.pct+'%;background:'+color(r.pct)+'"></i></span><span class="num">'+r.pct+'%</span></td>'
